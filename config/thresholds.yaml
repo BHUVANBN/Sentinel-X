@@ -1,0 +1,32 @@
+brute_force:
+  count: 10
+  window_seconds: 60
+
+password_spray:
+  count: 5
+  window_seconds: 120
+
+lateral_movement:
+  window_seconds: 300
+
+exfiltration:
+  bytes_threshold: 104857600   # 100 MB
+  window_seconds: 300
+
+c2_beacon:
+  min_connections: 3
+  interval_variance_percent: 10
+
+port_scan:
+  port_count: 20
+  window_seconds: 30
+
+privilege_escalation:
+  window_seconds: 60
+
+suspicious_process:
+  window_seconds: 30
+
+ransomware:
+  file_count: 500
+  window_seconds: 30

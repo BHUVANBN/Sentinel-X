@@ -1,0 +1,30 @@
+id: RW-001
+name: Ransomware Indicator - Mass File Operations
+description: >
+  Detects a rapid burst of file rename, write, or encrypt operations within a short
+  time window, which is a strong indicator of ransomware encrypting files on the system.
+mitre_technique: T1486
+mitre_tactic: Impact
+severity: critical
+confidence_base: 90
+
+match:
+  event_type: file_change
+  category: file
+
+conditions:
+  - field: file_action
+    operator: in
+    values: [modified, renamed, created]
+
+aggregate:
+  group_by: [process_name]
+  count_threshold: 500
+  time_window_seconds: 30
+
+response_actions:
+  - type: kill_process
+    target_field: pid
+  - type: isolate_network
+  - type: notify
+    message: "RANSOMWARE ALERT: {process_name} modified {event_count} files in {time_window}s"

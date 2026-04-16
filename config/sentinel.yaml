@@ -1,0 +1,31 @@
+system:
+  hostname: auto
+  platform: auto
+  poll_interval_seconds: 1
+  log_level: INFO
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  secret_key: change_me_in_production
+
+llm:
+  provider: anthropic
+  model: claude-haiku-4-5
+  api_key: ${ANTHROPIC_API_KEY}
+  ollama_url: http://localhost:11434
+  ollama_model: llama3
+  fallback_enabled: true
+
+storage:
+  backend: sqlite
+  sqlite_path: data/sentinel.db
+  event_retention_hours: 24
+
+detection:
+  rules_dir: detection/rules
+  enabled_rules: all
+
+response:
+  require_approval: true
+  audit_log: data/audit.log

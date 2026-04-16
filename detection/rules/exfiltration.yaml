@@ -1,0 +1,33 @@
+id: EX-001
+name: Data Exfiltration over Network
+description: >
+  Detects unusually large outbound data transfers to external IP addresses,
+  indicating potential data exfiltration where an attacker or malware is sending
+  stolen data to a command-and-control server or external drop site.
+mitre_technique: T1041
+mitre_tactic: Exfiltration
+severity: critical
+confidence_base: 80
+
+match:
+  event_type: network_connect
+  category: network
+
+conditions:
+  - field: dest_ip
+    operator: is_external
+
+aggregate:
+  group_by: [dest_ip]
+  count_threshold: 1
+  time_window_seconds: 300
+  sum_field: bytes_sent
+  sum_threshold: 104857600
+
+response_actions:
+  - type: block_ip
+    target_field: dest_ip
+  - type: kill_process
+    target_field: pid
+  - type: notify
+    message: "Data exfiltration detected: {bytes_sent_total} bytes sent to {dest_ip}"

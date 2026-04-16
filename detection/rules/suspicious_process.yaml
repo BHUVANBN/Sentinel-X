@@ -1,0 +1,27 @@
+id: SP-001
+name: Suspicious Process Execution
+description: >
+  Detects execution of known offensive tools or processes with suspicious command-line
+  patterns, including reverse shells, encoded commands, download cradles, and
+  common penetration testing tools.
+mitre_technique: T1059
+mitre_tactic: Execution
+severity: high
+confidence_base: 85
+
+match:
+  event_type: suspicious_process
+  category: process
+
+aggregate:
+  group_by: [process_name]
+  count_threshold: 1
+  time_window_seconds: 30
+
+response_actions:
+  - type: kill_process
+    target_field: pid
+  - type: dump_process
+    target_field: pid
+  - type: notify
+    message: "Suspicious process detected: {process_name} — cmdline: {command_line}"

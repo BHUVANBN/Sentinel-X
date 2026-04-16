@@ -1,0 +1,36 @@
+id: LM-001
+name: Lateral Movement via Remote Services
+description: >
+  Detects internal-to-internal network connections on typical remote service ports
+  (SMB 445, SSH 22, RDP 3389, WinRM 5985/5986), indicating potential lateral movement
+  where a compromised host attempts to pivot to other internal systems.
+mitre_technique: T1021
+mitre_tactic: Lateral Movement
+severity: high
+confidence_base: 75
+
+match:
+  event_type: network_connect
+  category: network
+
+conditions:
+  - field: dest_port
+    operator: in
+    values: [22, 445, 3389, 5985, 5986]
+  - field: dest_ip
+    operator: is_internal
+  - field: source_ip
+    operator: is_internal
+
+aggregate:
+  group_by: [source_ip, dest_ip]
+  count_threshold: 1
+  time_window_seconds: 300
+
+response_actions:
+  - type: block_ip
+    target_field: source_ip
+  - type: isolate_host
+    target_field: source_ip
+  - type: notify
+    message: "Lateral movement detected: {source_ip} → {dest_ip}:{dest_port}"

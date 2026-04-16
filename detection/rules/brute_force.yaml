@@ -1,0 +1,25 @@
+id: BF-001
+name: SSH/RDP Brute Force Attack
+description: >
+  Detects repeated failed login attempts from the same source IP address,
+  indicating a credential stuffing or brute force attack against SSH or RDP services.
+mitre_technique: T1110
+mitre_tactic: Credential Access
+severity: high
+confidence_base: 85
+
+match:
+  event_type: login_failure
+  category: authentication
+  outcome: failure
+
+aggregate:
+  group_by: [source_ip]
+  count_threshold: 10
+  time_window_seconds: 60
+
+response_actions:
+  - type: block_ip
+    target_field: source_ip
+  - type: notify
+    message: "Brute force attack from {source_ip} detected — {event_count} failed attempts in {time_window}s"

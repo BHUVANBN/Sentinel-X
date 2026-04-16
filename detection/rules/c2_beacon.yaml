@@ -1,0 +1,35 @@
+id: C2-001
+name: Command and Control Beacon
+description: >
+  Detects periodic network connections to the same external IP address at regular
+  intervals, indicating a C2 beacon pattern where malware phones home to receive
+  commands from an attacker-controlled server.
+mitre_technique: T1071
+mitre_tactic: Command and Control
+severity: critical
+confidence_base: 85
+
+match:
+  event_type: network_connect
+  category: network
+
+conditions:
+  - field: dest_ip
+    operator: is_external
+
+aggregate:
+  group_by: [dest_ip]
+  count_threshold: 3
+  time_window_seconds: 300
+  periodicity_check: true
+  interval_variance_percent: 10
+
+response_actions:
+  - type: block_ip
+    target_field: dest_ip
+  - type: kill_process
+    target_field: pid
+  - type: dump_process
+    target_field: pid
+  - type: notify
+    message: "C2 beacon detected: periodic connections to {dest_ip} every ~{interval}s"

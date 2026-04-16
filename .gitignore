@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# Large Data Files
+data/*.json
+data/*.csv
+!data/loader.py
+
+# Node / Dashboard
+dashboard/node_modules/
+dashboard/dist/
+dashboard/build/
+.next/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
