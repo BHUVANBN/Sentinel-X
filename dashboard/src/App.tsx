@@ -786,16 +786,12 @@ function ConfigPage({ notify }: { notify: any }) {
   };
 
   const simTypes = [
-    { type: 'brute_force', name: 'SSH Brute Force', severity: 'high' },
-    { type: 'password_spray', name: 'Password Spray', severity: 'high' },
+    { type: 'brute_force', name: 'Brute Force / Credential Stuffing', severity: 'high' },
     { type: 'lateral_movement', name: 'Lateral Movement', severity: 'high' },
     { type: 'exfiltration', name: 'Data Exfiltration', severity: 'critical' },
     { type: 'c2_beacon', name: 'C2 Beacon', severity: 'critical' },
-    { type: 'privilege_escalation', name: 'Privilege Escalation', severity: 'critical' },
-    { type: 'suspicious_process', name: 'Suspicious Process', severity: 'high' },
-    { type: 'port_scan', name: 'Port Scan', severity: 'medium' },
-    { type: 'full_chain', name: 'Full Attack Chain', severity: 'critical' },
-    { type: 'advanced_incident', name: 'Multi-Phase APT', severity: 'critical' },
+    { type: 'advanced_incident', name: 'Multi-Phase APT (Chain)', severity: 'critical' },
+    { type: 'false_positive', name: 'Admin Backup (False Positive)', severity: 'medium' },
   ];
 
   return (

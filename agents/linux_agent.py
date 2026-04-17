@@ -15,11 +15,52 @@ from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional, Set
 
 import psutil
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from agents.base_agent import BaseAgent
 from normalizer.schema import RawEvent
 
 logger = logging.getLogger("sentinel.agent.linux")
+
+
+class FileChangeHandler(FileSystemEventHandler):
+    """Watchdog handler for FIM events."""
+    def __init__(self, queue: asyncio.Queue, hostname: str):
+        self.queue = queue
+        self.hostname = hostname
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            self._push_event(event, 'file_modified')
+
+    def on_created(self, event):
+        if not event.is_directory:
+            self._push_event(event, 'file_created')
+
+    def on_deleted(self, event):
+        if not event.is_directory:
+            self._push_event(event, 'file_deleted')
+
+    def on_moved(self, event):
+        if not event.is_directory:
+            self._push_event(event, 'file_moved')
+
+    def _push_event(self, event, action):
+        asyncio.run_coroutine_threadsafe(
+            self.queue.put(RawEvent(
+                source='linux_file',
+                event_type=action,
+                raw={
+                    'file_path': event.src_path,
+                    'file_action': action,
+                    'is_directory': event.is_directory,
+                    'platform': 'linux',
+                },
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )),
+            asyncio.get_event_loop()
+        )
 
 
 class LinuxAgent(BaseAgent):
@@ -37,6 +78,15 @@ class LinuxAgent(BaseAgent):
         self._known_connections: Set[tuple] = set()
         self._last_login_check = datetime.now(timezone.utc)
         self._initialize_baselines()
+        
+        # Initialize FIM (File Integrity Monitoring)
+        self._observer = Observer()
+        self._fim_handler = FileChangeHandler(self.queue, self.hostname)
+        # In a real system, we'd watch /etc, /bin, /usr/bin. 
+        # For demo/hackathon safety on limited environments, we watch /tmp and project root too.
+        self._observer.schedule(self._fim_handler, "/tmp", recursive=False)
+        self._observer.start()
+        
         logger.info(f"Agent initialized for platform: linux, interval: {interval}s")
 
     def _initialize_baselines(self):
@@ -234,7 +284,14 @@ class LinuxAgent(BaseAgent):
 
         try:
             # Get network I/O counters for data volume tracking
-            # current_io is already captured at the start of the method
+            current_io = psutil.net_io_counters()
+            now_ts = time.time()
+            delta_sent = current_io.bytes_sent - self._prev_net_io.bytes_sent
+            delta_recv = current_io.bytes_recv - self._prev_net_io.bytes_recv
+            
+            # Update counters for next cycle
+            self._prev_net_io = current_io
+            self._prev_net_io_time = now_ts
 
             for conn in psutil.net_connections(kind='inet'):
                 try:

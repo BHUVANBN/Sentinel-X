@@ -32,17 +32,11 @@ async def run_simulation(attack_type: str, queue: asyncio.Queue) -> int:
     """Run a predefined attack simulation by injecting events into the queue."""
     simulators = {
         'brute_force': simulate_brute_force,
-        'password_spray': simulate_password_spray,
         'lateral_movement': simulate_lateral_movement,
         'exfiltration': simulate_exfiltration,
         'c2_beacon': simulate_c2_beacon,
-        'privilege_escalation': simulate_privilege_escalation,
-        'suspicious_process': simulate_suspicious_process,
-        'port_scan': simulate_port_scan,
-        'full_chain': simulate_full_chain,
-        'web_attack': simulate_web_attack,
-        'false_positive': simulate_false_positive_backup,
         'advanced_incident': simulate_advanced_incident,
+        'false_positive': simulate_false_positive_backup,
     }
 
     simulator = simulators.get(attack_type)
@@ -227,6 +221,27 @@ async def simulate_web_attack(queue: asyncio.Queue,
         await queue.put(event)
         await asyncio.sleep(0.3)
     return len(attacks)
+
+
+async def simulate_file_integrity_attack(queue: asyncio.Queue) -> int:
+    """Simulate mass file modification / unauthorized /etc access."""
+    files = [
+        ('/etc/passwd', 'file_modified'),
+        ('/etc/shadow', 'file_modified'),
+        ('/bin/bash', 'file_modified'),
+        ('/tmp/.hidden_exploit', 'file_created'),
+        ('/var/log/auth.log', 'file_deleted'),
+    ]
+    for path, action in files:
+        await queue.put(RawEvent(
+            source='linux_file',
+            event_type=action,
+            raw={'file_path': path, 'file_action': action, 'is_directory': False, 'platform': 'linux'},
+            timestamp=datetime.now(timezone.utc).isoformat()
+        ))
+        await asyncio.sleep(0.5)
+    return len(files)
+
 
 async def simulate_full_chain(queue: asyncio.Queue) -> int:
     """Complete Attack Chain with realistic source."""
