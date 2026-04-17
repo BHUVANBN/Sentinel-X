@@ -96,6 +96,18 @@ class LinuxResponder:
                     'reversible': False,
                 })
 
+            elif action_type == 'isolate_container':
+                actions.append({
+                    'action_type': 'isolate_container',
+                    'command': 'docker pause sentinelx_target',
+                    'command_parts': ['docker', 'pause', 'sentinelx_target'],
+                    'justification': 'CRITICAL: Physically pause the target container to freeze all activity. '
+                                   'This stops the attacker instantly while preserving forensic memory state.',
+                    'target': 'sentinelx_target',
+                    'reversible': True,
+                    'undo_command': 'docker unpause sentinelx_target',
+                })
+
         return actions
 
     def _resolve_target(self, alert: dict, target_field: str) -> str:

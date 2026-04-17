@@ -76,8 +76,11 @@ class LinuxAgent(BaseAgent):
         self._prev_net_io_time = time.time()
         self._known_pids: Set[int] = set()
         self._known_connections: Set[tuple] = set()
-        self._last_login_check = datetime.now(timezone.utc)
         self._initialize_baselines()
+        
+        # v3.0: Target log path (mounted from target container)
+        self.target_log_path = "/target-logs/auth.log"
+        self._target_log_task = None
         
         # Initialize FIM (File Integrity Monitoring)
         self._observer = Observer()
@@ -88,6 +91,51 @@ class LinuxAgent(BaseAgent):
         self._observer.start()
         
         logger.info(f"Agent initialized for platform: linux, interval: {interval}s")
+        if os.path.exists(self.target_log_path):
+            logger.info(f"V3.0: Found target log at {self.target_log_path}. Tailer starting.")
+            self._target_log_task = asyncio.create_task(self._monitor_target_logs())
+
+    async def _monitor_target_logs(self):
+        """Tail the Docker-shared target auth.log in real-time."""
+        import aiofiles
+        import os
+        
+        if not os.path.exists(self.target_log_path):
+            return
+
+        async with aiofiles.open(self.target_log_path, mode='r') as f:
+            # Seek to end of file to avoid processing old logs
+            await f.seek(0, os.SEEK_END)
+            
+            while True:
+                line = await f.readline()
+                if line:
+                    # Generic PAM auth failure/success parser
+                    event = self._parse_pam_line(line.strip())
+                    if event:
+                        await self.queue.put(event)
+                else:
+                    await asyncio.sleep(0.1)
+
+    def _parse_pam_line(self, line: str) -> Optional[RawEvent]:
+        """Simple parser for standard Linux auth.log PAM lines."""
+        if 'sshd' not in line:
+            return None
+            
+        event_type = None
+        if 'Failed password' in line or 'authentication failure' in line:
+            event_type = 'login_failure'
+        elif 'Accepted' in line or 'session opened' in line:
+            event_type = 'login_success'
+            
+        if event_type:
+            return RawEvent(
+                source='linux_auth',
+                event_type=event_type,
+                raw={'MESSAGE': line, '_COMM': 'sshd', 'platform': 'linux', 'target': 'remote-node'},
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+        return None
 
     def _initialize_baselines(self):
         """Capture current process and connection snapshots as baseline."""

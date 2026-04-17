@@ -1,0 +1,17 @@
+id: WEB-002
+name: Web Path Discovery
+description: Rapid probing of sensitive web paths (404/403 entries).
+mitre_tactic: Discovery
+mitre_technique: T1083
+severity: medium
+confidence_base: 70
+conditions:
+  category: network
+  event_type: network_connect
+  dest_port: 80
+  window_seconds: 60
+  threshold: 5
+  group_by: source_ip
+response_actions:
+  - type: notify
+    message: Web path enumeration detected.

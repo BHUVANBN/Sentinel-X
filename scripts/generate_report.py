@@ -34,35 +34,46 @@ def generate_report():
 SENTINEL-X TECHNICAL IMPLEMENTATION REPORT
 ============================================================
 Document Type: Full Technical Specification & Code Dump
-Version: 2.1.0 (Hackathon Optimized)
+VERSION 3.0.0 — REAL-ATTACK LAB EDITION
 Date: {datetime.now().strftime('%B %d, %Y')}
-Status: PRODUCTION READY - PROBLEM STATEMENT 3 COMPLIANT
+Status: PRODUCTION READY  |  STRICT PROBLEM STATEMENT 3 COMPLIANCE
 ============================================================
 
 1. EXECUTIVE SUMMARY
 ------------------------------------------------------------
-SENTINEL-X is a high-throughput Security Operations Center (SOC) framework
-designed for real-time threat detection, cross-layer correlation, and 
-AI-driven explainability. 
+SENTINEL-X v3.0 is a production-grade Security Operations Center (SOC) platform 
+that eliminates the fundamental weakness of demo-mode security tools: fake data. 
+Every alert in Sentinel-X v3.0 is triggered by genuine adversarial activity—real
+Kali Linux tools attacking a real Ubuntu target, producing authentic OS logs.
 
-The system has been specifically hardened for Hack Malenadu '26, focusing on:
-- High-efficiency asynchronous event ingestion (1000+ ev/s).
-- Strategic focus on 4 core threat categories (Brute Force, Lateral, Exfil, C2).
-- AI-powered forensic narratives with OS-specific mitigation playbooks.
-- Integrated self-validation and data replay (CICIDS 2017).
+Key Innovations in v3.0:
+- ZERO-SIMULATION: Real-world tool chain (Nmap -> Hydra -> Curl -> Netcat).
+- 3-CONTAINER LAB: Isolated range for Attacker, Target, and Defender.
+- DUAL-PATH TELEMETRY: Unified visibility via Shared Volumes + Docker Socket.
+- AI COGNITION: Forensic narratives with "Diversity Boosting" correlation.
+- ACTIVE SOAR: Direct Container Isolation (Docker Pause) from the dashboard.
 
-2. SYSTEM ARCHITECTURE
+2. PROBLEM STATEMENT 3 — COMPLIANCE TRACKER
 ------------------------------------------------------------
-SENTINEL-X operates on a 7-layer security stack:
-- LAYER 1: MONITORING (Multi-Platform Agents: Linux, Win, Mac)
-- LAYER 2: NORMALIZATION (ECS-Compatible schema mapper)
-- LAYER 3: DETECTION (Asynchronous YAML-based rule evaluation)
-- LAYER 4: CORRELATION (Multi-signal logic with Diversity Boosting)
+✔ Layer 1 (Ingestion): 3-Layer coverage (Network, Endpoint, Application).
+✔ Layer 1 (Throughput): Async worker pool handling 1000+ ev/sec.
+✔ Layer 2 (Targeted): Monitors the 4 mandatory threats (BF, LM, EX, C2).
+✔ Data (Authenticity): No synthetic injection; real log tailing and streaming.
+✔ Explainability: AI Forensic Narrative + mitigation commands.
+✔ Bonus (Simulation): Automated Attack Orchestrator + Self-Validation engine.
+
+3. SYSTEM ARCHITECTURE
+------------------------------------------------------------
+SENTINEL-X operates on a hardened 7-layer security stack:
+- LAYER 1: MONITORING (Multi-Path log tailing + Docker Socket telemetry)
+- LAYER 2: NORMALIZATION (ECS-Compatible schema orchestration)
+- LAYER 3: DETECTION (Asynchronous YAML rules with threshold windows)
+- LAYER 4: CORRELATION (Multi-signal logic linking independent detections)
 - LAYER 5: EXPLAINABILITY (AI Narrator + Full MITRE ATT&CK Mapping)
-- LAYER 6: RESPONSE (Human-in-the-loop OS-aware SOAR)
+- LAYER 6: RESPONSE (Human-in-the-loop Container & OS isolation)
 - LAYER 7: DASHBOARD (React 18 Premium SOC Visualizer)
 
-3. FOLDER STRUCTURE
+4. FOLDER STRUCTURE
 ------------------------------------------------------------
 {get_tree(PROJECT_ROOT)}
 

@@ -96,6 +96,17 @@ CORRELATION_RULES = [
         'severity_override': 'critical',
         'mitre_chain': ['T1110', 'T1021', 'T1041'],
     },
+    {
+        'id': 'CORR-008',
+        'name': 'Full Attack Lifecycle (v3.0)',
+        'description': 'Reconnaissance → Brute Force → Web Probe → C2 establishment',
+        'triggers': ['RECON-001', 'BF-001', 'WEB-002', 'C2-001'],
+        'link_field': 'source_ip',
+        'time_window_seconds': 1800,
+        'confidence_boost': 30,
+        'severity_override': 'critical',
+        'mitre_chain': ['T1046', 'T1110', 'T1018', 'T1071'],
+    },
 ]
 
 

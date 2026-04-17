@@ -1,33 +1,48 @@
 version: '3.9'
 services:
+  attacker:
+    build: ./containers/attacker
+    container_name: sentinelx_attacker
+    networks:
+      lab_network:
+        ipv4_address: 172.20.0.2
+    restart: unless-stopped
+
+  target:
+    build: ./containers/target
+    container_name: sentinelx_target
+    networks:
+      lab_network:
+        ipv4_address: 172.20.0.3
+    volumes:
+      - target_logs:/var/log
+    restart: unless-stopped
+
   sentinel-backend:
     build: .
-    network_mode: host
+    container_name: sentinelx_engine
+    network_mode: host # Host mode so dashboard is easily accessible
     privileged: true
     volumes:
       - ./config:/app/config
       - ./data:/app/data
+      - target_logs:/target-logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SENTINEL_DEMO_MODE=1
     ports:
       - '8000:8000'
+    depends_on:
+      - target
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  sentinel-db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_PASSWORD: sentinel
-      POSTGRES_DB: sentinel
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
-    restart: unless-stopped
+networks:
+  lab_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
 
 volumes:
-  pgdata:
+  target_logs:

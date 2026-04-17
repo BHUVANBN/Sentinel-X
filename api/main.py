@@ -64,21 +64,27 @@ class SentinelState:
         self.db = Database(self.config.db_url)
         self.db.init_db()
         self.normalizer = Normalizer()
+        self.mitre_mapper = MitreMapper()
+        
+        # Core engines
         self.rules = load_all_rules(
             self.config.get('detection.rules_dir', 'detection/rules'),
             self.config.get('detection.enabled_rules', 'all'),
         )
         self.detection_engine = DetectionEngine(self.rules)
         self.correlation_engine = CorrelationEngine()
-        self.mitre_mapper = MitreMapper()
         self.narrator = Narrator(self.config.llm, self.mitre_mapper)
         self.response_engine = ResponseEngine()
-        self.event_queue: asyncio.Queue = asyncio.Queue()
+        
+        # Agents
+        self.agent = None
+        self.docker_agent = ContainerTelemetryAgent(self.event_queue)
+        
         self.alert_subscribers: list[WebSocket] = []
         self.metrics_subscribers: list[WebSocket] = []
         self.start_time = time.time()
-        self.agent = None
         self.agent_task: Optional[asyncio.Task] = None
+        self.docker_agent_task: Optional[asyncio.Task] = None
         self.pipeline_task: Optional[asyncio.Task] = None
         self.metrics_task: Optional[asyncio.Task] = None
         self.test_mode = False
@@ -301,6 +307,12 @@ async def startup():
 
         state.agent_task = asyncio.create_task(state.agent.run())
         logger.info(f"OS agent started for platform: {current_platform}")
+        
+        # v3.0: Start Docker Telemetry Agent
+        if state.docker_agent:
+            state.docker_agent_task = asyncio.create_task(state.docker_agent.run())
+            logger.info("Docker Telemetry agent started")
+
     except Exception as e:
         logger.error(f"Failed to start OS agent: {e}")
 
@@ -315,6 +327,8 @@ async def shutdown():
         await state.agent.stop()
     if state.agent_task:
         state.agent_task.cancel()
+    if state.docker_agent_task:
+        state.docker_agent_task.cancel()
     if state.pipeline_task:
         state.pipeline_task.cancel()
     if state.metrics_task:
